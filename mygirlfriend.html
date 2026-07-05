@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For You // Heart Catcher</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffe5ec, #ffc2d1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(255, 105, 180, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            z-index: 10;
+        }
+
+        .photo-container {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 0.5rem;
+            border-radius: 50%;
+            border: 4px solid #ff8fab;
+            overflow: hidden;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        h1 {
+            color: #ff477e;
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .score-board {
+            font-size: 1.1rem;
+            color: #6c757d;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        /* Game Canvas Area */
+        #game-container {
+            width: 100%;
+            height: 300px;
+            background: #fff0f5;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            border: 2px dashed #ff8fab;
+            margin-top: 10rempx;
+            cursor: none;
+        }
+
+        .basket {
+            width: 60px;
+            height: 30px;
+            background: #ff477e;
+            border-radius: 0 0 30px 30px;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .falling-heart {
+            position: absolute;
+            font-size: 1.5rem;
+            user-select: none;
+        }
+
+        .win-message {
+            display: none;
+            color: #ff477e;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="photo-container">
+            <img src="girlfriend.jpg" alt="My Girl">
+        </div>
+        <h1>Catch My Love! ❤️</h1>
+        <div class="score-board">Hearts Collected: <span id="score">0</span>/10</div>
+        
+        <div id="game-container">
+            <div class="basket" id="basket">🧺</div>
+        </div>
+
+        <div class="win-message" id="win-txt">🎉 You win my whole heart! Forever! 👑💖</div>
+    </div>
+
+    <script>
+        const container = document.getElementById('game-container');
+        const basket = document.getElementById('basket');
+        const scoreDisplay = document.getElementById('score');
+        const winTxt = document.getElementById('win-txt');
+        
+        let score = 0;
+        let gameActive = true;
+        let basketX = container.offsetWidth / 2;
+
+        // Track mouse or finger movement over the game area
+        container.addEventListener('mousemove', (e) => {
+            if (!gameActive) return;
+            const rect = container.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            moveBasket(x);
+        });
+
+        container.addEventListener('touchmove', (e) => {
+            if (!gameActive) return;
+            const rect = container.getBoundingClientRect();
+            let x = e.touches[0].clientX - rect.left;
+            moveBasket(x);
+        });
+
+        function moveBasket(x) {
+            if (x < 30) x = 30;
+            if (x > container.offsetWidth - 30) x = container.offsetWidth - 30;
+            basketX = x;
+            basket.style.left = x + 'px';
+        }
+
+        // Generate falling heart loops
+        function spawnHeart() {
+            if (!gameActive) return;
+
+            const heart = document.createElement('div');
+            heart.classList.add('falling-heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * (container.offsetWidth - 30) + 'px';
+            heart.style.top = '0px';
+            container.appendChild(heart);
+
+            let posY = 0;
+            const speed = 2 + Math.random() * 3; // Random falling speed
+
+            const interval = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(interval);
+                    heart.remove();
+                    return;
+                }
+
+                posY += speed;
+                heart.style.top = posY + 'px';
+
+                // Check collision with basket
+                if (posY >= container.offsetHeight - 45 && posY <= container.offsetHeight - 20) {
+                    const heartX = parseFloat(heart.style.left);
+                    if (Math.abs(heartX - basketX + 15) < 35) {
+                        score++;
+                        scoreDisplay.innerText = score;
+                        clearInterval(interval);
+                        heart.remove();
+
+                        if (score >= 10) {
+                            endGame();
+                        }
+                    }
+                }
+
+                // Remove heart if it hits the bottom
+                if (posY > container.offsetHeight) {
+                    clearInterval(interval);
+                    heart.remove();
+                }
+            }, 20);
+        }
+
+        function endGame() {
+            gameActive = false;
+            winTxt.style.display = 'block';
+            basket.innerHTML = '💝';
+        }
+
+        // Spawn a heart every 1.2 seconds
+        setInterval(spawnHeart, 1200);
+    </script>
+
+</body>
+</html>
